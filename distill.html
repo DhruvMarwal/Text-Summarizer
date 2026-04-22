@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Distill — ATML Lab 6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --paper:#F7F3EC;
+  --paper2:#EDE8DC;
+  --paper3:#E2DCCC;
+  --ink:#1C1810;
+  --ink2:#4A4438;
+  --ink3:#8A8070;
+  --rust:#BF4A0A;
+  --rust-bg:#FCF0EA;
+  --teal:#1A6B62;
+  --teal-bg:#E8F4F2;
+  --rule:#D4CCBC;
+  --serif:'Playfair Display',Georgia,serif;
+  --sans:'Lato',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;min-height:100vh}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--paper2)}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px}
+
+/* ── HEADER ── */
+header{background:var(--paper);border-bottom:2px solid var(--ink);position:sticky;top:0;z-index:100}
+.header-inner{max-width:1040px;margin:0 auto;padding:0 32px;display:flex;align-items:stretch;gap:0}
+.logo-block{padding:16px 28px 12px 0;border-right:1px solid var(--rule);margin-right:0;flex-shrink:0}
+.logo{font-family:var(--serif);font-size:30px;line-height:1;letter-spacing:-0.01em;color:var(--ink)}
+.logo-sub{font-family:var(--mono);font-size:9px;color:var(--ink3);letter-spacing:0.14em;margin-top:4px;text-transform:uppercase}
+.tab-nav{display:flex;align-items:flex-end;padding-left:0}
+.tab-btn{background:transparent;border:none;border-bottom:2.5px solid transparent;color:var(--ink3);font-family:var(--sans);font-size:13px;font-weight:400;padding:12px 22px;cursor:pointer;transition:all 0.15s;letter-spacing:0.02em;white-space:nowrap}
+.tab-btn.active{color:var(--rust);border-bottom-color:var(--rust);font-weight:700}
+.tab-btn:hover:not(.active){color:var(--ink2);border-bottom-color:var(--rule)}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 0 0 20px;flex-shrink:0}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 2s ease-in-out infinite}
+.status-label{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+@keyframes pulse{0%,100%{opacity:0.6}50%{opacity:1}}
+
+/* ── LAYOUT ── */
+main{max-width:1040px;margin:0 auto;padding:0 32px 80px}
+.tab-pane{display:none;animation:reveal 0.35s ease both}
+.tab-pane.active{display:block}
+@keyframes reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HERO ── */
+.hero{padding:48px 0 36px;border-bottom:1px solid var(--rule);margin-bottom:36px}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:0.14em;color:var(--rust);text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:var(--serif);font-size:clamp(38px,5vw,62px);line-height:1.0;letter-spacing:-0.01em;color:var(--ink);margin-bottom:16px}
+.hero h1 em{font-style:italic;color:var(--rust)}
+.hero p{font-size:15px;color:var(--ink3);max-width:540px;line-height:1.75;font-weight:300}
+
+/* ── PIPELINE ── */
+.pipeline-wrap{background:var(--paper2);border:1px solid var(--rule);border-radius:10px;padding:18px 24px;margin-bottom:28px;overflow-x:auto}
+.pipeline{display:flex;align-items:center;gap:0;min-width:500px}
+.pipe-node{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:80px}
+.pipe-icon{width:40px;height:40px;border-radius:8px;border:1.5px solid var(--rule);background:var(--paper);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;color:var(--ink3);transition:all 0.3s;cursor:default;font-weight:500}
+.pipe-icon.active{background:var(--rust);border-color:var(--rust);color:#fff}
+.pipe-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);transition:color 0.3s}
+.pipe-label.active{color:var(--rust)}
+.pipe-arrow{color:var(--rule);font-size:16px;padding:0 6px;padding-bottom:18px;flex-shrink:0}
+
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:28px}
+.metric{background:var(--paper2);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.metric-label{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.metric-val{font-family:var(--serif);font-size:26px;color:var(--ink);line-height:1}
+.metric-val.highlight{color:var(--rust)}
+
+/* ── EDITOR GRID ── */
+.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:700px){.editor-grid{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--rule);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid var(--rule);background:var(--paper2)}
+.panel-title{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3)}
+.panel-dot{width:7px;height:7px;border-radius:50%;background:var(--rule)}
+.panel-dot.blue{background:#5B9BD5}
+.panel-dot.green{background:var(--teal)}
+.panel-actions{display:flex;gap:6px;align-items:center}
+.pill-btn{background:transparent;border:1px solid var(--rule);border-radius:20px;color:var(--ink3);font-family:var(--mono);font-size:10px;padding:3px 12px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.pill-btn:hover{border-color:var(--ink3);color:var(--ink)}
+.pill-btn.active{background:var(--teal);border-color:var(--teal);color:#fff}
+textarea{flex:1;min-height:260px;background:transparent;border:none;outline:none;resize:none;font-family:var(--sans);font-size:14px;line-height:1.75;color:var(--ink);padding:16px;width:100%}
+textarea::placeholder{color:var(--ink3)}
+.panel-footer{padding:8px 16px;border-top:1px solid var(--rule);background:var(--paper2)}
+.progress-bar{height:3px;background:var(--paper3);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.progress-fill{height:100%;background:var(--teal);border-radius:2px;transition:width 0.3s,background 0.3s}
+.progress-fill.warn{background:var(--rust)}
+.footer-note{font-family:var(--mono);font-size:9px;color:var(--ink3);letter-spacing:0.06em}
+.output-body{flex:1;padding:16px;min-height:260px}
+.output-placeholder{font-style:italic;color:var(--ink3);font-size:14px;line-height:1.75}
+.output-text{font-size:14px;line-height:1.85;color:var(--ink);font-weight:300}
+.output-summary-footer{font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:0.06em}
+.error-box{background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:12px 14px}
+.error-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:#DC2626;margin-bottom:4px}
+.error-msg{font-size:13px;color:#991B1B;line-height:1.6}
+
+/* ── SKELETON ── */
+.skeleton-line{height:13px;border-radius:4px;background:var(--paper2);margin-bottom:10px;animation:shimmer 1.4s infinite linear;background-size:600px 100%}
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.skeleton-line{background:linear-gradient(90deg,var(--paper2) 25%,var(--paper3) 50%,var(--paper2) 75%);background-size:600px 100%}
+
+/* ── CONTROLS ── */
+.controls{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:22px 26px;margin-bottom:16px}
+.controls-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink3);margin-bottom:18px}
+.slider-row{display:flex;gap:32px;flex-wrap:wrap;margin-bottom:22px}
+.slider-group{flex:1;min-width:200px}
+.slider-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.slider-name{font-size:13px;color:var(--ink2);font-weight:300}
+.slider-val{font-family:var(--mono);font-size:12px;color:var(--rust);font-weight:500}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--rule);border-radius:2px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--rust);cursor:pointer;border:none}
+input[type=range].blue::-webkit-slider-thumb{background:#5B9BD5}
+.slider-ends{display:flex;justify-content:space-between;margin-top:4px}
+.slider-end{font-family:var(--mono);font-size:9px;color:var(--rule)}
+.divider{height:1px;background:var(--rule);margin:0 0 20px}
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--rust);border:none;border-radius:8px;color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;padding:12px 28px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px;letter-spacing:0.02em}
+.btn-primary:hover:not(:disabled){background:#A03D08}
+.btn-primary:disabled{background:var(--rule);color:var(--ink3);cursor:not-allowed}
+.btn-ghost{background:transparent;border:1px solid var(--rule);border-radius:8px;color:var(--ink3);font-family:var(--sans);font-size:14px;padding:12px 20px;cursor:pointer;transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--ink3);color:var(--ink)}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:spin 0.6s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-badge{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.status-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--rule)}
+.status-badge-dot.ready{background:var(--teal);animation:pulse 1.5s infinite}
+.status-badge-dot.running{background:#F59E0B;animation:pulse 0.8s infinite}
+.status-badge-dot.error{background:var(--rust)}
+.api-note{font-family:var(--mono);font-size:10px;color:var(--ink3);padding:4px 0;letter-spacing:0.04em}
+.api-note span{color:var(--rule)}
+
+/* ── RESULTS TAB ── */
+.results-hero{padding:44px 0 32px;border-bottom:1px solid var(--rule);margin-bottom:36px}
+.results-hero h2{font-family:var(--serif);font-size:clamp(28px,4vw,46px);line-height:1.1;color:var(--ink);margin-bottom:10px}
+.results-hero p{font-size:14px;color:var(--ink3);font-weight:300;max-width:520px;line-height:1.75}
+.section-head{font-family:var(--serif);font-size:20px;color:var(--ink);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.section-head em{font-style:italic;color:var(--rust)}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:36px}
+.result-card{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:18px 20px}
+.result-card-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink3);margin-bottom:8px}
+.result-card-val{font-family:var(--serif);font-size:28px;color:var(--ink);line-height:1;margin-bottom:4px}
+.result-card-sub{font-size:12px;color:var(--ink3);font-weight:300}
+.result-card.accent .result-card-val{color:var(--teal)}
+.result-card.warm .result-card-val{color:var(--rust)}
+.arch-diagram{background:var(--paper2);border:1px solid var(--rule);border-radius:10px;padding:24px;margin-bottom:36px}
+.arch-row{display:flex;align-items:center;gap:0;overflow-x:auto;padding-bottom:4px}
+.arch-box{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:12px 14px;min-width:120px;flex-shrink:0}
+.arch-box-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);margin-bottom:4px}
+.arch-box-detail{font-size:12px;color:var(--ink2);line-height:1.5;font-weight:300}
+.arch-box.enc{border-top:3px solid #5B9BD5}
+.arch-box.dec{border-top:3px solid var(--rust)}
+.arch-box.bridge{border-top:3px solid var(--teal)}
+.arch-arrow{color:var(--rule);font-size:18px;padding:0 10px;flex-shrink:0;padding-bottom:8px}
+.task-table{width:100%;border-collapse:collapse;margin-bottom:36px;font-size:13px}
+.task-table th{text-align:left;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink3);padding:8px 12px;border-bottom:2px solid var(--rule);font-weight:400}
+.task-table td{padding:11px 12px;border-bottom:1px solid var(--paper3);color:var(--ink2);vertical-align:top}
+.task-table tr:last-child td{border-bottom:none}
+.task-table tr:hover td{background:var(--paper2)}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.08em}
+.badge.blue{background:#EFF6FF;color:#1E40AF}
+.badge.green{background:var(--teal-bg);color:var(--teal)}
+.badge.orange{background:var(--rust-bg);color:var(--rust)}
+.bleu-box{background:var(--paper2);border-left:3px solid var(--teal);padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:36px}
+.bleu-box-title{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--teal);margin-bottom:8px}
+.bleu-score{font-family:var(--serif);font-size:36px;color:var(--teal);line-height:1;margin-bottom:6px}
+.bleu-note{font-size:12px;color:var(--ink3);font-weight:300;line-height:1.6}
+
+/* ── README TAB ── */
+.readme{padding:44px 0 60px;max-width:720px}
+.readme h2{font-family:var(--serif);font-size:clamp(28px,4vw,42px);color:var(--ink);margin-bottom:10px;line-height:1.1}
+.readme h2 em{font-style:italic;color:var(--rust)}
+.readme .tagline{font-size:14px;color:var(--ink3);font-weight:300;margin-bottom:36px;line-height:1.7}
+.readme h3{font-family:var(--serif);font-size:18px;color:var(--ink);margin-bottom:10px;margin-top:32px;padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.readme p{font-size:14px;color:var(--ink2);line-height:1.8;font-weight:300;margin-bottom:14px}
+.readme ul{margin:0 0 16px 0;padding-left:20px}
+.readme li{font-size:14px;color:var(--ink2);line-height:1.8;font-weight:300;margin-bottom:4px}
+.readme li::marker{color:var(--rust)}
+.code-block{background:var(--paper2);border:1px solid var(--rule);border-radius:8px;padding:16px 18px;margin-bottom:16px;overflow-x:auto}
+.code-block pre{font-family:var(--mono);font-size:12px;color:var(--ink2);line-height:1.7;white-space:pre}
+.inline-code{font-family:var(--mono);font-size:12px;background:var(--paper2);border:1px solid var(--rule);padding:1px 6px;border-radius:4px;color:var(--rust)}
+.readme-card{background:#fff;border:1px solid var(--rule);border-radius:10px;padding:18px 20px;margin-bottom:16px}
+.readme-card-head{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink3);margin-bottom:6px}
+.readme-card-body{font-size:13px;color:var(--ink2);line-height:1.7;font-weight:300}
+.note-box{background:var(--rust-bg);border-left:3px solid var(--rust);padding:14px 18px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:13px;color:var(--rust);line-height:1.7}
+.toc{background:var(--paper2);border:1px solid var(--rule);border-radius:10px;padding:18px 20px;margin-bottom:28px}
+.toc-label{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink3);margin-bottom:10px}
+.toc a{display:block;font-size:13px;color:var(--rust);text-decoration:none;padding:2px 0;line-height:1.7;font-weight:300}
+.toc a:hover{text-decoration:underline}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--rule);margin-top:0;padding:20px 0}
+.footer-inner{max-width:1040px;margin:0 auto;padding:0 32px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.footer-text{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:0.06em}
+
+@media(max-width:600px){
+  .header-inner{padding:0 16px}
+  main{padding:0 16px 60px}
+  .editor-grid{grid-template-columns:1fr}
+  .slider-row{flex-direction:column;gap:20px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo">Distill</div>
+      <div class="logo-sub">ATML Lab 6 &mdash; Enc / Dec</div>
+    </div>
+    <nav class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('tool',this)">Summarizer</button>
+      <button class="tab-btn" onclick="switchTab('results',this)">Model Results</button>
+      <button class="tab-btn" onclick="switchTab('readme',this)">Read Me</button>
+    </nav>
+    <div class="header-right">
+      <div class="status-dot" id="hdr-dot"></div>
+      <span class="status-label" id="hdr-label">localhost:8000</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══════════════════════════════════════════
+     TAB 1 — SUMMARIZER TOOL
+═══════════════════════════════════════════ -->
+<div class="tab-pane active" id="pane-tool">
+
+  <div class="hero">
+    <div class="hero-eyebrow">facebook/bart-large-cnn &nbsp;&bull;&nbsp; encoder–decoder</div>
+    <h1>Intelligent<br/><em>Text Compression</em></h1>
+    <p>Paste any long-form text. The BART encoder contextualises every token; the decoder generates a fluent, abstractive summary.</p>
+  </div>
+
+  <!-- Pipeline -->
+  <div class="pipeline-wrap" style="margin-bottom:28px">
+    <div class="pipeline">
+      <div class="pipe-node">
+        <div class="pipe-icon" id="pn-input">IN</div>
+        <div class="pipe-label" id="pl-input">Input</div>
+      </div>
+      <div class="pipe-arrow">&rarr;</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" id="pn-tok">&#9084;</div>
+        <div class="pipe-label" id="pl-tok">Tokenise</div>
+      </div>
+      <div class="pipe-arrow">&rarr;</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" id="pn-enc">Enc</div>
+        <div class="pipe-label" id="pl-enc">Encoder</div>
+      </div>
+      <div class="pipe-arrow">&rarr;</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" id="pn-attn">&#8857;</div>
+        <div class="pipe-label" id="pl-attn">Attention</div>
+      </div>
+      <div class="pipe-arrow">&rarr;</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" id="pn-dec">Dec</div>
+        <div class="pipe-label" id="pl-dec">Decoder</div>
+      </div>
+      <div class="pipe-arrow">&rarr;</div>
+      <div class="pipe-node">
+        <div class="pipe-icon" id="pn-out">&#10022;</div>
+        <div class="pipe-label" id="pl-out">Output</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Input words</div><div class="metric-val" id="m-inw">0</div></div>
+    <div class="metric"><div class="metric-label">Output words</div><div class="metric-val" id="m-outw">0</div></div>
+    <div class="metric"><div class="metric-label">Compression</div><div class="metric-val highlight" id="m-comp">&mdash;</div></div>
+    <div class="metric"><div class="metric-label">Input tokens</div><div class="metric-val" id="m-intok">&mdash;</div></div>
+    <div class="metric"><div class="metric-label">Output tokens</div><div class="metric-val" id="m-outtok">&mdash;</div></div>
+  </div>
+
+  <!-- Editor panels -->
+  <div class="editor-grid">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-dot blue"></div>input.txt</div>
+        <div class="panel-actions">
+          <button class="pill-btn" onclick="loadDemo()">load demo</button>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--ink3)" id="wc-input">0 words</span>
+        </div>
+      </div>
+      <textarea id="input-text" placeholder="Paste your article, research paper, or any long-form text here…" oninput="updateMetrics()"></textarea>
+      <div class="panel-footer">
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="footer-note" id="prog-note">0 / 1000 words &nbsp;&bull;&nbsp; within single-pass limit</div>
+      </div>
+    </div>
+
+    <div class="panel" id="output-panel">
+      <div class="panel-header">
+        <div class="panel-title"><div class="panel-dot" id="out-dot"></div>summary.txt</div>
+        <div class="panel-actions">
+          <button class="pill-btn" id="copy-btn" onclick="copySummary()">copy</button>
+        </div>
+      </div>
+      <div class="output-body" id="output-body">
+        <p class="output-placeholder" id="out-placeholder">Summary will appear here after processing&hellip;</p>
+        <div id="skeleton" style="display:none">
+          <div class="skeleton-line" style="width:88%"></div>
+          <div class="skeleton-line" style="width:100%"></div>
+          <div class="skeleton-line" style="width:72%"></div>
+          <div class="skeleton-line" style="width:95%"></div>
+          <div class="skeleton-line" style="width:60%"></div>
+        </div>
+        <p class="output-text" id="out-text" style="display:none"></p>
+        <div class="error-box" id="error-box" style="display:none">
+          <div class="error-label">Error</div>
+          <div class="error-msg" id="error-msg"></div>
+        </div>
+      </div>
+      <div class="panel-footer" id="out-footer" style="display:none">
+        <div class="output-summary-footer" id="out-footer-text"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="controls-label">Generation parameters</div>
+    <div class="slider-row">
+      <div class="slider-group">
+        <div class="slider-top">
+          <span class="slider-name">Max summary length</span>
+          <span class="slider-val" id="max-val">130 tokens</span>
+        </div>
+        <input type="range" id="max-len" min="50" max="300" step="10" value="130" oninput="document.getElementById('max-val').textContent=this.value+' tokens'"/>
+        <div class="slider-ends"><span class="slider-end">50</span><span class="slider-end">300</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-top">
+          <span class="slider-name">Min summary length</span>
+          <span class="slider-val" id="min-val" style="color:#5B9BD5">30 tokens</span>
+        </div>
+        <input type="range" class="blue" id="min-len" min="10" max="100" step="5" value="30" oninput="document.getElementById('min-val').textContent=this.value+' tokens'"/>
+        <div class="slider-ends"><span class="slider-end">10</span><span class="slider-end">100</span></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="btn-row">
+      <button class="btn-primary" id="run-btn" onclick="runSummarize()" disabled>
+        <span id="btn-inner">Summarize &rarr;</span>
+      </button>
+      <button class="btn-ghost" onclick="clearAll()">Clear</button>
+      <div class="status-badge" id="status-badge">
+        <div class="status-badge-dot" id="badge-dot"></div>
+        <span id="badge-text">waiting for input</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-note">POST <span>&nbsp;</span> http://localhost:8000/summarize</div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     TAB 2 — MODEL RESULTS
+═══════════════════════════════════════════ -->
+<div class="tab-pane" id="pane-results">
+
+  <div class="results-hero">
+    <div class="hero-eyebrow" style="margin-bottom:12px">Training summary &nbsp;&bull;&nbsp; ATML Lab 6</div>
+    <h2>What the model learned</h2>
+    <p>Results from three encoder–decoder experiments: Hindi translation, BLEU evaluation, and English–Spanish translation via opus_books.</p>
+  </div>
+
+  <div class="section-head">Task overview</div>
+  <table class="task-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Dataset</th>
+        <th>Architecture</th>
+        <th>Objective</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Task 1</strong></td>
+        <td>Hindi–English Truncated Corpus</td>
+        <td>LSTM Enc–Dec (256 latent)</td>
+        <td>English &rarr; Hindi translation</td>
+        <td><span class="badge green">Complete</span></td>
+      </tr>
+      <tr>
+        <td><strong>Task 2</strong></td>
+        <td>Same as Task 1</td>
+        <td>Same model</td>
+        <td>BLEU score evaluation (n=30)</td>
+        <td><span class="badge green">Complete</span></td>
+      </tr>
+      <tr>
+        <td><strong>Task 3</strong></td>
+        <td>opus_books en-es (15 000 pairs)</td>
+        <td>LSTM Enc–Dec (256 latent)</td>
+        <td>English &rarr; Spanish translation</td>
+        <td><span class="badge green">Complete</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-head">Architecture used</div>
+  <div class="arch-diagram">
+    <div class="arch-row">
+      <div class="arch-box enc">
+        <div class="arch-box-title">Encoder</div>
+        <div class="arch-box-detail">Embedding (128d)<br/>LSTM (256 units)<br/>Returns state h, c</div>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box bridge">
+        <div class="arch-box-title">Context vector</div>
+        <div class="arch-box-detail">State h &amp; c passed<br/>as initial state<br/>to decoder</div>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box dec">
+        <div class="arch-box-title">Decoder</div>
+        <div class="arch-box-detail">Embedding (128d)<br/>LSTM (256 units)<br/>Dense &rarr; Softmax</div>
+      </div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-box" style="border-top:3px solid var(--ink3)">
+        <div class="arch-box-title">Inference</div>
+        <div class="arch-box-detail">Auto-regressive<br/>token-by-token<br/>&lt;start&gt; &rarr; &lt;end&gt;</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">Key hyperparameters</div>
+  <div class="results-grid" style="margin-bottom:36px">
+    <div class="result-card">
+      <div class="result-card-label">Embedding dim</div>
+      <div class="result-card-val">128</div>
+      <div class="result-card-sub">Both encoder &amp; decoder</div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Latent dim (LSTM)</div>
+      <div class="result-card-val">256</div>
+      <div class="result-card-sub">Hidden units per layer</div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Vocab size</div>
+      <div class="result-card-val">15 k</div>
+      <div class="result-card-sub">Task 1 &amp; 2; 10 k for Task 3</div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Max sequence</div>
+      <div class="result-card-val">15–20</div>
+      <div class="result-card-sub">Tokens, padded post</div>
+    </div>
+    <div class="result-card">
+      <div class="result-card-label">Batch size</div>
+      <div class="result-card-val">32</div>
+      <div class="result-card-sub">All tasks</div>
+    </div>
+    <div class="result-card accent">
+      <div class="result-card-label">Early stopping</div>
+      <div class="result-card-val">✓</div>
+      <div class="result-card-sub">Patience 15, Task 1&amp;2</div>
+    </div>
+  </div>
+
+  <div class="section-head">BLEU score — Task 2</div>
+  <div class="bleu-box">
+    <div class="bleu-box-title">BLEU-1 (smoothed, n=30 samples)</div>
+    <div class="bleu-score">~0.18 – 0.28</div>
+    <div class="bleu-note">
+      Typical range for a basic LSTM seq2seq model on the Hindi–English truncated corpus without attention.<br/>
+      Smoothing method: SmoothingFunction().method1 (add-1 smoothing per Chen &amp; Cherry 2014).<br/>
+      <strong>Note:</strong> LSTM seq2seq without explicit attention tends to saturate at low BLEU on long sequences. Adding Bahdanau attention would substantially improve scores.
+    </div>
+  </div>
+
+  <div class="section-head">Training observations</div>
+  <div class="results-grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:36px">
+    <div class="readme-card">
+      <div class="readme-card-head">Task 1 — English &rarr; Hindi</div>
+      <div class="readme-card-body">Model trained for up to 20 epochs with early stopping (patience 15). Mixed precision (float16) enabled for faster Kaggle GPU training. Validation split of 10%. Convergence typically seen around epoch 12–16 given the truncated corpus size.</div>
+    </div>
+    <div class="readme-card">
+      <div class="readme-card-head">Task 3 — English &rarr; Spanish</div>
+      <div class="readme-card-body">Used 15 000 pairs from opus_books (en-es) via HuggingFace Datasets. Trained 15 epochs, no early stopping. Spanish benefited from higher lexical overlap with English, generally yielding smoother outputs vs Hindi despite fewer epochs.</div>
+    </div>
+    <div class="readme-card">
+      <div class="readme-card-head">Data preprocessing</div>
+      <div class="readme-card-body">English cleaned with regex (a-zA-Z only). Hindi preserved Unicode characters. Special tokens &lt;start&gt; and &lt;end&gt; added to target sequences. Sequences filtered to 2–20 word lengths to reduce noise. Post-padding applied.</div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     TAB 3 — README
+═══════════════════════════════════════════ -->
+<div class="tab-pane" id="pane-readme">
+  <div class="readme">
+
+    <div style="padding-top:44px"></div>
+    <div class="hero-eyebrow">ATML Lab 6 &nbsp;&bull;&nbsp; Documentation</div>
+    <h2>Distill<br/><em>Encoder–Decoder Summarizer</em></h2>
+    <p class="tagline">A FastAPI backend using facebook/bart-large-cnn paired with a clean HTML/CSS/JS frontend. Built for ATML Lab 6 as a practical demonstration of encoder–decoder sequence-to-sequence architectures.</p>
+
+    <div class="toc">
+      <div class="toc-label">Contents</div>
+      <a href="#overview">Overview</a>
+      <a href="#setup">Setup &amp; installation</a>
+      <a href="#usage">Using the summarizer</a>
+      <a href="#architecture">Architecture explained</a>
+      <a href="#api">API reference</a>
+      <a href="#lab-context">Lab context</a>
+    </div>
+
+    <h3 id="overview">Overview</h3>
+    <p>This project has two parts. The <strong>backend</strong> (<span class="inline-code">summarizer_backend.py</span>) is a FastAPI server that loads BART and exposes a <span class="inline-code">POST /summarize</span> endpoint. The <strong>frontend</strong> (<span class="inline-code">distill.html</span>) is this file — a standalone HTML page that calls that endpoint and visualises results.</p>
+    <p>BART (Bidirectional and Auto-Regressive Transformer) is an encoder–decoder model pre-trained with a denoising objective, then fine-tuned on CNN/DailyMail for summarisation. This makes it well-suited to abstractive summarisation where the output is fluent, human-readable prose rather than extracted sentences.</p>
+
+    <h3 id="setup">Setup &amp; installation</h3>
+    <p>Install Python dependencies:</p>
+    <div class="code-block"><pre>pip install fastapi uvicorn transformers torch sentencepiece</pre></div>
+
+    <p>Start the backend server:</p>
+    <div class="code-block"><pre>uvicorn summarizer_backend:app --reload --port 8000</pre></div>
+
+    <p>Open the frontend — just double-click <span class="inline-code">distill.html</span> in your file browser, or serve it locally:</p>
+    <div class="code-block"><pre>python -m http.server 3000
+# then visit http://localhost:3000/distill.html</pre></div>
+
+    <div class="note-box"><strong>First run:</strong> BART (~1.6 GB) is downloaded from HuggingFace on first startup. This can take a few minutes depending on your connection. Subsequent runs use the local cache.</div>
+
+    <h3 id="usage">Using the summarizer</h3>
+    <ul>
+      <li>Paste any text into the <strong>Input</strong> panel (or click "load demo" for a sample).</li>
+      <li>Adjust <strong>Max</strong> and <strong>Min length</strong> sliders to control summary verbosity.</li>
+      <li>Click <strong>Summarize</strong> — the pipeline animation shows inference progress.</li>
+      <li>Use the <strong>copy</strong> button to grab the summary. The compression metric shows how much shorter the output is.</li>
+      <li>Texts over ~1 000 tokens are automatically chunked; partial summaries are merged and re-summarised.</li>
+    </ul>
+
+    <h3 id="architecture">Architecture explained</h3>
+
+    <div class="readme-card">
+      <div class="readme-card-head">Encoder (bidirectional transformer)</div>
+      <div class="readme-card-body">Takes the input token sequence and produces contextual representations for every position. Self-attention allows each token to attend to every other token in both directions simultaneously — unlike LSTM which processes left-to-right.</div>
+    </div>
+    <div class="readme-card">
+      <div class="readme-card-head">Cross-attention bridge</div>
+      <div class="readme-card-body">At each decoder step, cross-attention queries the full encoder output to decide which parts of the input are most relevant for generating the next token. This is what allows abstractive behaviour — the decoder can rephrase and restructure content freely.</div>
+    </div>
+    <div class="readme-card">
+      <div class="readme-card-head">Decoder (auto-regressive)</div>
+      <div class="readme-card-body">Generates output tokens one at a time, left to right. Each new token conditions on all previously generated tokens (masked self-attention) plus the encoder's contextual representations (cross-attention). Beam search (n=4) is used at inference for better quality.</div>
+    </div>
+
+    <h3 id="api">API reference</h3>
+
+    <p><strong>GET /health</strong> — returns <span class="inline-code">{"status":"ok"}</span>. Use to check if the server is running.</p>
+    <p><strong>GET /</strong> — returns server status and active model name.</p>
+    <p><strong>POST /summarize</strong></p>
+    <div class="code-block"><pre>{
+  "text":       "string  (required)",
+  "max_length": 130,     // int, 30–500, default 130
+  "min_length": 30       // int, 10–200, default 30
+}</pre></div>
+
+    <p>Response:</p>
+    <div class="code-block"><pre>{
+  "summary":      "string",
+  "input_tokens": 312,
+  "output_tokens": 87,
+  "model":        "facebook/bart-large-cnn"
+}</pre></div>
+
+    <p>If the BART model fails to load (e.g. no internet, no GPU), the backend falls back to a local extractive frequency-based summariser automatically. The <span class="inline-code">model</span> field in the response will say <span class="inline-code">extractive-frequency-fallback</span> in that case.</p>
+
+    <h3 id="lab-context">Lab context</h3>
+    <p>This frontend was built for ATML Lab 6, which focused on encoder–decoder architectures. The lab consisted of three tasks:</p>
+    <ul>
+      <li><strong>Task 1:</strong> Build an LSTM-based seq2seq model for English–Hindi translation using the Hindi–English Truncated Corpus.</li>
+      <li><strong>Task 2:</strong> Evaluate the Task 1 model using BLEU score (smoothed, n=30 samples).</li>
+      <li><strong>Task 3:</strong> Train a new seq2seq model for English–Spanish translation using 15 000 pairs from the opus_books dataset via HuggingFace.</li>
+    </ul>
+    <p>The summarizer backend uses a pre-trained BART model rather than a trained-from-scratch model, demonstrating how the same encoder–decoder principle scales from small LSTM experiments to large transformer architectures.</p>
+
+    <div style="height:40px"></div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-text">Distill &mdash; ATML Lab 6 &mdash; Encoder / Decoder Architecture</span>
+    <span class="footer-text">facebook/bart-large-cnn &nbsp;&bull;&nbsp; FastAPI &nbsp;&bull;&nbsp; Vanilla HTML</span>
+  </div>
+</footer>
+
+<script>
+const API = 'http://localhost:8000/summarize';
+let summaryText = '';
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('pane-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+const DEMO = `The transformer architecture, introduced in the 2017 paper "Attention Is All You Need" by Vaswani et al., has fundamentally reshaped natural language processing. Unlike predecessors such as recurrent and convolutional networks, the transformer dispenses with sequential computation, relying instead on self-attention to model relationships between all positions in a sequence simultaneously. This parallel structure made transformers extraordinarily efficient to train on modern GPU hardware. The encoder maps an input sequence to continuous representations capturing contextual meaning at each position. The decoder then generates outputs one token at a time, attending both to its own prior outputs and to the encoder representations via cross-attention. This encoder-decoder design proved ideal for sequence-to-sequence tasks such as machine translation, summarisation, and question answering. Pre-trained variants such as BERT, GPT, T5, and BART fine-tuned on downstream tasks achieved state-of-the-art results across virtually every NLP benchmark by 2020. The emergence of large language models trained on internet-scale corpora has since extended transformer capabilities far beyond language: they now process images, audio, code, and multi-modal data. Despite their success, transformers scale quadratically with sequence length in vanilla attention, prompting research into linear and sparse attention variants. Their appetite for compute and data also raises questions around efficiency and equitable access. Nevertheless, the transformer stands as arguably the most consequential architectural innovation in the history of artificial intelligence.`;
+
+function loadDemo() {
+  document.getElementById('input-text').value = DEMO;
+  updateMetrics();
+}
+
+function wc(t) { return t.trim() ? t.trim().split(/\s+/).length : 0; }
+
+function updateMetrics() {
+  const t = document.getElementById('input-text').value;
+  const w = wc(t);
+  document.getElementById('m-inw').textContent = w;
+  document.getElementById('wc-input').textContent = w + ' words';
+  const pct = Math.min(100, (w / 1000) * 100);
+  const fill = document.getElementById('prog-fill');
+  fill.style.width = pct + '%';
+  fill.classList.toggle('warn', w > 800);
+  document.getElementById('prog-note').textContent =
+    w + ' / 1000 words \u00a0\u2022\u00a0 ' + (w > 800 ? 'chunking will apply' : 'within single-pass limit');
+  const runBtn = document.getElementById('run-btn');
+  runBtn.disabled = !t.trim();
+  const dot = document.getElementById('badge-dot');
+  const label = document.getElementById('badge-text');
+  if (t.trim()) { dot.className = 'status-badge-dot ready'; label.textContent = 'ready'; }
+  else { dot.className = 'status-badge-dot'; label.textContent = 'waiting for input'; }
+}
+
+function updateOutputMetrics(inW, outW, inTok, outTok) {
+  document.getElementById('m-outw').textContent = outW;
+  const comp = inW > 0 && outW > 0 ? Math.round((1 - outW/inW)*100) + '%' : '\u2014';
+  document.getElementById('m-comp').textContent = comp;
+  document.getElementById('m-intok').textContent = inTok ?? '\u2014';
+  document.getElementById('m-outtok').textContent = outTok ?? '\u2014';
+}
+
+const pipeIds = ['input','tok','enc','attn','dec','out'];
+function setPipe(active) {
+  pipeIds.forEach(id => {
+    const ic = document.getElementById('pn-' + id);
+    const lb = document.getElementById('pl-' + id);
+    if (!ic) return;
+    if (id === active) {
+      ic.classList.add('active'); lb.classList.add('active');
+    } else {
+      ic.classList.remove('active'); lb.classList.remove('active');
+    }
+  });
+}
+
+async function stepPipe(steps, ms=340) {
+  for (const s of steps) {
+    setPipe(s);
+    await new Promise(r => setTimeout(r, ms));
+  }
+}
+
+function showSkeleton() {
+  document.getElementById('out-placeholder').style.display = 'none';
+  document.getElementById('skeleton').style.display = 'block';
+  document.getElementById('out-text').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('out-footer').style.display = 'none';
+  document.getElementById('out-dot').className = 'panel-dot';
+}
+
+function showResult(text, inW, outW, inTok, outTok) {
+  document.getElementById('skeleton').style.display = 'none';
+  document.getElementById('out-placeholder').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  const el = document.getElementById('out-text');
+  el.textContent = text;
+  el.style.display = 'block';
+  document.getElementById('out-dot').className = 'panel-dot green';
+  const comp = inW > 0 && outW > 0 ? Math.round((1-outW/inW)*100)+'%' : '';
+  document.getElementById('out-footer').style.display = 'block';
+  document.getElementById('out-footer-text').textContent = outW + ' words \u00a0\u2022\u00a0 ' + comp + ' shorter than original';
+}
+
+function showError(msg) {
+  document.getElementById('skeleton').style.display = 'none';
+  document.getElementById('out-placeholder').style.display = 'none';
+  document.getElementById('out-text').style.display = 'none';
+  document.getElementById('error-box').style.display = 'block';
+  document.getElementById('error-msg').textContent = msg;
+  document.getElementById('out-dot').className = 'panel-dot';
+  document.getElementById('out-footer').style.display = 'none';
+}
+
+function showPlaceholder() {
+  document.getElementById('skeleton').style.display = 'none';
+  document.getElementById('out-text').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('out-footer').style.display = 'none';
+  document.getElementById('out-placeholder').style.display = 'block';
+  document.getElementById('out-dot').className = 'panel-dot';
+}
+
+async function runSummarize() {
+  const text = document.getElementById('input-text').value.trim();
+  if (!text) return;
+  const maxLen = parseInt(document.getElementById('max-len').value);
+  const minLen = parseInt(document.getElementById('min-len').value);
+
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('btn-inner').innerHTML = '<div style="width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:spin 0.6s linear infinite;flex-shrink:0"></div> Processing&hellip;';
+  const dot = document.getElementById('badge-dot');
+  const label = document.getElementById('badge-text');
+  dot.className = 'status-badge-dot running'; label.textContent = 'running inference\u2026';
+  summaryText = '';
+
+  document.getElementById('m-outw').textContent = '0';
+  document.getElementById('m-comp').textContent = '\u2014';
+  document.getElementById('m-intok').textContent = '\u2014';
+  document.getElementById('m-outtok').textContent = '\u2014';
+
+  showSkeleton();
+  await stepPipe(['input','tok','enc','attn'], 320);
+
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({text, max_length:maxLen, min_length:minLen})
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(()=>({}));
+      throw new Error(d.detail || 'HTTP ' + res.status);
+    }
+    const data = await res.json();
+    await stepPipe(['dec','out'], 280);
+
+    summaryText = data.summary;
+    const inW = wc(text);
+    const outW = wc(summaryText);
+    showResult(summaryText, inW, outW, data.input_tokens, data.output_tokens);
+    updateOutputMetrics(inW, outW, data.input_tokens, data.output_tokens);
+    dot.className = 'status-badge-dot ready'; label.textContent = 'done';
+
+  } catch(e) {
+    showError('Cannot reach backend \u2014 ' + e.message);
+    dot.className = 'status-badge-dot error'; label.textContent = 'error';
+    setPipe(null);
+  }
+
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('btn-inner').innerHTML = 'Summarize &rarr;';
+  setTimeout(() => setPipe(null), 1600);
+}
+
+function clearAll() {
+  document.getElementById('input-text').value = '';
+  summaryText = '';
+  showPlaceholder();
+  updateMetrics();
+  document.getElementById('m-inw').textContent = '0';
+  document.getElementById('m-outw').textContent = '0';
+  document.getElementById('m-comp').textContent = '\u2014';
+  document.getElementById('m-intok').textContent = '\u2014';
+  document.getElementById('m-outtok').textContent = '\u2014';
+  setPipe(null);
+  const dot = document.getElementById('badge-dot');
+  dot.className = 'status-badge-dot'; document.getElementById('badge-text').textContent = 'waiting for input';
+}
+
+function copySummary() {
+  if (!summaryText) return;
+  navigator.clipboard.writeText(summaryText);
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'copied!'; btn.classList.add('active');
+  setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('active'); }, 1800);
+}
+
+document.getElementById('input-text').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runSummarize();
+});
+</script>
+</body>
+</html>
