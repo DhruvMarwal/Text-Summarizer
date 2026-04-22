@@ -23,12 +23,24 @@ The interface shows you the full pipeline as it runs, live compression stats (wo
 
 ---
 
-## Screenshots
+## Website
 
-<p align="center">
-  <img src="screenshots/summarizer.png" alt="Summarizer tool" width="100%"/>
-  <br/><em>Summarizer tab — paste text, adjust length, get a summary</em>
-</p>
+## Test: 
+- <img width="1813" height="871" alt="image" src="https://github.com/user-attachments/assets/685ae85e-c9b2-49cd-83b5-a234d4b40b0d" />
+
+- <img width="1770" height="868" alt="image" src="https://github.com/user-attachments/assets/c13d41f2-bd04-4372-8990-bfe03a3cc3bd" />
+
+- <img width="1546" height="785" alt="image" src="https://github.com/user-attachments/assets/86dc1f5c-c322-4534-90ef-b2494269d43e" />
+
+- <img width="1624" height="791" alt="image" src="https://github.com/user-attachments/assets/bdd56b91-ff50-4ec1-b794-b595984d857f" />
+
+## Training Summary
+
+- <img width="1570" height="866" alt="image" src="https://github.com/user-attachments/assets/832aa5fd-7c43-48f8-a1b8-d9a20038b3c2" />
+
+- <img width="1565" height="580" alt="image" src="https://github.com/user-attachments/assets/f8d1789d-8d99-4007-b2ce-e80c1369e37c" />
+
+- <img width="1612" height="657" alt="image" src="https://github.com/user-attachments/assets/fb15e2d8-f1df-40ae-8d53-dc878b61e237" />
 
 <br/>
 
@@ -91,7 +103,7 @@ python -m uvicorn summarizer_backend:app --port 8000
 
 ### 4. Open the frontend
 
-Double-click `distill.html` — no local server needed.
+Double-click `distill.html` in File Manager — no local server needed.
 
 Verify the backend is alive at `http://localhost:8000/health`:
 
